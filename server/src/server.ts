@@ -8,21 +8,21 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs, resolvers } from './schemas/index.js';
 import { authenticateToken } from './services/auth.js';
 
+const PORT = process.env.PORT || 3001;
 
 const server = new ApolloServer({
   typeDefs,
-  resolvers
+  resolvers,
+  introspection: true,
 });
+
+const app = express();
 
 const startApolloServer = async () => {
   await server.start();
   await db();
 
-
-  const app = express();
-  const PORT = process.env.PORT || 3001;
-
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.urlencoded({ extended: false }));
   app.use(express.json());
 
   app.use('/graphql', expressMiddleware(server as any,

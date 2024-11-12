@@ -1,8 +1,12 @@
 import { AuthenticationError, signToken } from "../services/auth.js";
-import { User } from "../models/index.js";
+import  { User } from "../models/index.js";
 
 interface UserArgs {
-    username: string;
+    user: {
+        username: string;
+        email: string;
+        _id: string;
+    }
 }
 
 interface AddUserArgs {
@@ -20,19 +24,18 @@ interface LoginUserArgs {
 
 interface SavedBookArgs {
     bookId: string;
+    title: string;
+    authors: String[];
+    description: String;
+    image: String;
+    link: String;
 }
 
 const resolvers = {
     Query: {
-        user: async (_parent: any, { username }: UserArgs) => {
-            await User.findOne({ username }).populate('Book');
-        },
-        users: async () => {
-            await User.find().populate('Book');
-        },
         me: async (_parent: any, _args: any, context: any) => {
             if (context.user) {
-                return User.findOne({ _id: context.user._id }).populate('thoughts');
+                return User.findOne({ _id: context.user._id });
             }
             throw new AuthenticationError('Could not authenticate user.');
         },
@@ -63,30 +66,22 @@ const resolvers = {
 
             return { token, user };
         },
-        saveBook: async (_parent: any, { bookId }: SavedBookArgs, context: any) => {
+        saveBook: async (_parent: any, { input }: {input: SavedBookArgs}, context: UserArgs) => {
             const user = await User.findOneAndUpdate(
-                { _id: context.user.id },
-                { $addToSet: { savedBooks: bookId } },
-                { runValidators: true, new: true },
+                { _id: context.user._id },
+                { $push: { savedBooks: input } },
+                { new: true },
             )
             return user;
         },
-        deleteBook: async (_parent: any , { bookId }: SavedBookArgs, context: any) => {
+        deleteBook: async (_parent: any , { bookId }: { bookId: string }, context: UserArgs) => {
             if(context.user) {
-                const book = await User.findOne({
-                    _id: bookId,
-                });
-
-                if(!book) {
-                    throw new Error('Book not found');
-                }
-                
-                await User.findOneAndUpdate(
-                    { _id: context.user.id },
-                    { $pull: { savedBooks: book.id}}
+                const updatedUser = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $pull: { savedBooks: { bookId } }}
                 );
 
-                return book;
+                return updatedUser;
             }
             return;
         }
