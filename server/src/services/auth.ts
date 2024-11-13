@@ -7,7 +7,7 @@ dotenv.config();
 
 export const authenticateToken = ({ req }: any) => {
   let token = req.body.token || req.query.token || req.headers.authorization;
-  console.log(req.headers);
+  
   if (req.headers.authorization) {
     token = token.split(' ').pop().trim();
   }
@@ -18,11 +18,10 @@ export const authenticateToken = ({ req }: any) => {
 
   try {
     const { data }: any = jwt.verify(token, process.env.JWT_SECRET_KEY || '', { maxAge: '1hr' });
-    console.log(data);
+
     req.user = data;
     
   } catch (err) {
-
     console.error('Invalid token', err);
   }
 
