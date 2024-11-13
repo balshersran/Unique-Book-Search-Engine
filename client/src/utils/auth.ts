@@ -1,16 +1,24 @@
 // use this to decode a token and get the user's information out of it
-import { jwtDecode } from 'jwt-decode';
+import { type JwtPayload, jwtDecode } from 'jwt-decode';
 
 interface UserToken {
   name: string;
   exp: number;
+};
+
+interface ExtendedJwt extends JwtPayload {
+  data: {
+    username: string,
+    email: string,
+    id: string,
+  }
 }
 
 // create a new class to instantiate for a user
 class AuthService {
   // get user data
   getProfile() {
-    return jwtDecode(this.getToken() || '');
+    return jwtDecode<ExtendedJwt>(this.getToken() || '');
   }
 
   // check if user's logged in
@@ -28,7 +36,7 @@ class AuthService {
         return true;
       } 
       
-      return false;
+      
     } catch (err) {
       return false;
     }
@@ -36,7 +44,8 @@ class AuthService {
 
   getToken() {
     // Retrieves the user token from localStorage
-    return localStorage.getItem('id_token');
+    const loggedUser = localStorage.getItem('id_token') || '';
+    return loggedUser;
   }
 
   login(idToken: string) {
