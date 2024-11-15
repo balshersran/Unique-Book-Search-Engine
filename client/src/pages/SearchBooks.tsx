@@ -33,9 +33,6 @@ const SearchBooks = () => {
     return () => saveBookIds(savedBookIds);
   });
 
-  // use the mutation hook to grab saved books from mutations
-  const [saveBook] = useMutation(SAVE_BOOK);
-
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -68,31 +65,65 @@ const SearchBooks = () => {
     }
   };
 
-  // create function to handle saving a book to our database
+  const [ saveBookMutation ] = useMutation(SAVE_BOOK);
+
   const handleSaveBook = async (bookId: string) => {
-    // find the book in `searchedBooks` state by the matching id
+    
     const bookToSave: Book = searchedBooks.find((book) => book.bookId === bookId)!;
 
-    // get token
-    const token = Auth.loggedIn() ? Auth.getToken() : null;
+    const token = Auth.loggedIn()? Auth.getToken() : null;
 
-    if (!token) {
+    if(!token) {
       return false;
     }
 
     try {
-      const response = await saveBook(bookToSave, token);
+      const { data } = await saveBookMutation({
+        variables: {
+          authors: bookToSave.authors,
+          description: bookToSave.description,
+          title: bookToSave.title,
+          bookId: bookToSave.bookId,
+          image: bookToSave.image,
+          link: bookToSave.link
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
+      if (!data.saveBook) {
+        throw new Error('Cannot find book to save');
       }
 
-      // if book successfully saves to user's account, save book id to state
-      setSavedBookIds([...savedBookIds, bookToSave.bookId]);
-    } catch (err) {
-      console.error(err);
+      setSavedBookIds([ ...savedBookIds, bookToSave.bookId]);
+    } catch (error) {
+      console.error(error);
     }
-  };
+  }
+
+  // // // create function to handle saving a book to our database
+  // const handleSaveBook = async (bookId: string) => {
+  //   // find the book in `searchedBooks` state by the matching id
+  //   const bookToSave: Book = searchedBooks.find((book) => book.bookId === bookId)!;
+
+  //   // get token
+  //   const token = Auth.loggedIn() ? Auth.getToken() : null;
+
+  //   if (!token) {
+  //     return false;
+  //   }
+
+  //   try {
+  //     const response = await saveBook(bookToSave, token);
+
+  //     if (!response.ok) {
+  //       throw new Error('something went wrong!');
+  //     }
+
+  //     // if book successfully saves to user's account, save book id to state
+  //     setSavedBookIds([...savedBookIds, bookToSave.bookId]);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
 
 
