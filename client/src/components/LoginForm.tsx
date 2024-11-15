@@ -1,12 +1,12 @@
 // see SignupForm.js for comments
 import { useState } from 'react';
-import type { ChangeEvent } from 'react';
+import type { FormEvent, ChangeEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 
 // import { loginUser } from '../utils/API';
 import Auth from '../utils/auth';
-import type { User } from '../models/User';
-import { OperationVariables, useMutation } from '@apollo/client';
+import type { User } from '../models/User.js';
+import { useMutation } from '@apollo/client';
 import { LOGIN_USER } from '../utils/mutations.js';
 
 // biome-ignore lint/correctness/noEmptyPattern: <explanation>
@@ -20,28 +20,55 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
     setUserFormData({ ...userFormData, [name]: value });
   };
 
-  const [ loginUser ] = useMutation(LOGIN_USER);
+  const [ login ] = useMutation(LOGIN_USER);
 
-  const handleLogin = async ( userFormData: OperationVariables | undefined ) => {
+  // const handleLogin = async ( userFormData: User ) => {
+  //   try {
+  //     const { data } = await loginUser({
+  //       variables: { ...userFormData },
+  //     });
+
+  //     const token = data.loginUser.token;
+  //     Auth.login(token);
+  //   } catch (error) {
+  //     console.error(error);
+  //     setShowAlert(true);
+  //   }
+
+  //   setUserFormData({
+  //     username: '',
+  //     email: '',
+  //     password: '',
+  //     savedBooks: [],
+  //   })
+  // }
+
+  const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // check if form has everything (as per react-bootstrap docs)
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     try {
-      const { data } = await loginUser({
-        variables: { ...userFormData },
+      // console.log(userFormData)
+      const { data } = await login({
+        variables: {...userFormData },
       });
-
-      const token = data.loginUser.token;
-      Auth.login(token);
+      Auth.login(data.login.token);
     } catch (error) {
       console.error(error);
       setShowAlert(true);
     }
-
+    
     setUserFormData({
       username: '',
       email: '',
       password: '',
       savedBooks: [],
-    })
-  }
+    });
+  };
 
   // const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
   //   event.preventDefault();
@@ -77,7 +104,7 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
 
   return (
     <>
-      <Form noValidate validated={validated} onSubmit={handleLogin}>
+      <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
         <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
           Something went wrong with your login credentials!
         </Alert>
