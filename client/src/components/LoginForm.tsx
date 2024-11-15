@@ -1,11 +1,13 @@
 // see SignupForm.js for comments
 import { useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 
-import { loginUser } from '../utils/API';
+// import { loginUser } from '../utils/API';
 import Auth from '../utils/auth';
 import type { User } from '../models/User';
+import { OperationVariables, useMutation } from '@apollo/client';
+import { LOGIN_USER } from '../utils/mutations.js';
 
 // biome-ignore lint/correctness/noEmptyPattern: <explanation>
 const LoginForm = ({}: { handleModalClose: () => void }) => {
@@ -18,27 +20,18 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
     setUserFormData({ ...userFormData, [name]: value });
   };
 
-  const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const [ loginUser ] = useMutation(LOGIN_USER);
 
-    // check if form has everything (as per react-bootstrap docs)
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
+  const handleLogin = async ( userFormData: OperationVariables | undefined ) => {
     try {
-      const response = await loginUser(userFormData);
+      const { data } = await loginUser({
+        variables: { ...userFormData },
+      });
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const { token } = await response.json();
+      const token = data.loginUser.token;
       Auth.login(token);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setShowAlert(true);
     }
 
@@ -47,12 +40,44 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
       email: '',
       password: '',
       savedBooks: [],
-    });
-  };
+    })
+  }
+
+  // const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  //   event.preventDefault();
+
+  //   // check if form has everything (as per react-bootstrap docs)
+  //   const form = event.currentTarget;
+  //   if (form.checkValidity() === false) {
+  //     event.preventDefault();
+  //     event.stopPropagation();
+  //   }
+
+  //   try {
+  //     const response = await loginUser(userFormData);
+
+  //     if (!response.ok) {
+  //       throw new Error('something went wrong!');
+  //     }
+
+  //     const { token } = await response.json();
+  //     Auth.login(token);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setShowAlert(true);
+  //   }
+
+  //   setUserFormData({
+  //     username: '',
+  //     email: '',
+  //     password: '',
+  //     savedBooks: [],
+  //   });
+  // };
 
   return (
     <>
-      <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
+      <Form noValidate validated={validated} onSubmit={handleLogin}>
         <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
           Something went wrong with your login credentials!
         </Alert>

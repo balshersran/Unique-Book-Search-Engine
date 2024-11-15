@@ -15,6 +15,9 @@ import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 import type { Book } from '../models/Book';
 import type { GoogleAPIBook } from '../models/GoogleAPIBook';
 
+import { useMutation } from '@apollo/client';
+import { SAVE_BOOK } from '../utils/mutations.js';
+
 const SearchBooks = () => {
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState<Book[]>([]);
@@ -29,6 +32,9 @@ const SearchBooks = () => {
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
   });
+
+  // use the mutation hook to grab saved books from mutations
+  const [saveBook] = useMutation(SAVE_BOOK);
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -87,6 +93,8 @@ const SearchBooks = () => {
       console.error(err);
     }
   };
+
+
 
   return (
     <>
