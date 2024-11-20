@@ -1,5 +1,5 @@
 import { AuthenticationError, signToken } from "../services/auth.js";
-import  { User } from "../models/index.js";
+import { User } from "../models/index.js";
 
 interface UserArgs {
     user: {
@@ -66,7 +66,7 @@ const resolvers = {
 
             return { token, user };
         },
-        saveBook: async (_parent: any, { input }: {input: SavedBookArgs}, context: UserArgs) => {
+        saveBook: async (_parent: any, { input }: { input: SavedBookArgs }, context: UserArgs) => {
             const user = await User.findOneAndUpdate(
                 { _id: context.user._id },
                 { $push: { savedBooks: input } },
@@ -74,11 +74,11 @@ const resolvers = {
             )
             return user;
         },
-        removeBook: async (_parent: any , { bookId }: { bookId: string }, context: UserArgs) => {
-            if(context.user) {
+        removeBook: async (_parent: any, { bookId }: { bookId: string }, context: UserArgs) => {
+            if (context.user) {
                 const updatedUser = await User.findOneAndUpdate(
                     { _id: context.user._id },
-                    { $pull: { savedBooks: { bookId } }}
+                    { $pull: { savedBooks: { bookId } } }
                 );
 
                 return updatedUser;

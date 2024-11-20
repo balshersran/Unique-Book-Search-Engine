@@ -34,9 +34,9 @@ class AuthService {
       const decoded = jwtDecode<UserToken>(token);
       if (decoded.exp < Date.now() / 1000) {
         return true;
-      } 
-      
-      
+      }
+
+
     } catch (err) {
       return false;
     }
